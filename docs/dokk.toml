@@ -26,7 +26,12 @@ items = [
 
 [[sidebar]]
 label = "Django"
-items = ["django/setup.md", "django/usage.md", "django/models.md"]
+items = [
+    "django/setup.md",
+    "django/usage.md",
+    "django/models.md",
+    "django/exchange.md",
+]
 
 [[sidebar]]
 label = "Reference"

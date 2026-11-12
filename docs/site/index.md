@@ -84,4 +84,8 @@ Move money, one transfer or many at once.
 :::card[Django]{href="django/setup.md"}
 Ledger models for your Django project.
 :::
+
+:::card[Build an exchange]{href="django/exchange.md"}
+A step-by-step tour of a small currency exchange built on pledge.
+:::
 ::::
