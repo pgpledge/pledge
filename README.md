@@ -10,7 +10,8 @@
   <a href="https://pgpledge.github.io/pledge/sql/errors/">Errors</a> ·
   <a href="https://pgpledge.github.io/pledge/django/setup/">Django</a> ·
   <a href="python/example">Example</a> ·
-  <a href="bench/README.md">Benchmarks</a>
+  <a href="bench/README.md">Benchmarks</a> ·
+  <a href="https://pypi.org/project/django-pledge/">PyPI</a>
 </p>
 
 <p align="center">
@@ -50,7 +51,27 @@ SELECT name, balance FROM pledge.accounts_view ORDER BY name;
   transfer, and about 2 times faster for batches.
 - **Clear errors.** Each failure has a stable code, like `pledge.negative_balance_not_allowed`.
 
-Runs on PostgreSQL 17 and 18. For Django there is [django-pledge](python/).
+Runs on PostgreSQL 17 and 18.
+
+## Django
+
+[django-pledge](python/) gives you `Account`, `Transfer` and `Entry` models over the ledger,
+written through the usual Django API.
+
+```sh
+pip install django-pledge
+```
+
+```python
+from django_pledge.models import Account
+
+cash = Account.objects.create(name="cash", currency="EUR")
+alice = Account.objects.create(name="alice", currency="EUR", allow_negative_balance=False)
+cash.transfer(alice, 10)
+```
+
+See the [Django docs](https://pgpledge.github.io/pledge/django/setup/) and the
+[exchange example](python/example), a small currency exchange built on it.
 
 ## Develop
 
