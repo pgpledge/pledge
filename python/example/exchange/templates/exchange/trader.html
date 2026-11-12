@@ -1,177 +1,210 @@
 {% extends "exchange/base.html" %}
 {% load exchange_format %}
 {% block title %}{{ trader.name }}{% endblock %}
-{% block crumb %} › Trader {{ trader.name }}{% endblock %}
+{% block back %}
+<nav class="crumbs" aria-label="Breadcrumb">
+  <a class="back" href="{% url 'pages:traders' %}" aria-label="Back to traders">←</a>
+  <a href="{% url 'pages:home' %}">Overview</a> › <a href="{% url 'pages:traders' %}">Traders</a> › <span>{{ trader.name }}</span>
+</nav>
+{% endblock %}
 {% block content %}
-<h1>Trader: {{ trader.name }}</h1>
+<div class="layout">
+  <div>
+    <div class="title">
+      <span class="coin large">{{ trader.name|first|upper }}</span>
+      <div>
+        <h1>{{ trader.name }}</h1>
+        <p class="sub">Trader since {{ trader.created_at|date:"M j, Y" }} · {{ wallets|length }} wallet{{ wallets|length|pluralize }}</p>
+      </div>
+    </div>
 
-<section>
-  <h2>{{ trader.name }}'s wallets</h2>
-  <table>
-    <tr><th>Currency</th><th>Account number</th><th>Balance</th><th>Status</th></tr>
-    {% for wallet in wallets %}
-      <tr><td>{{ wallet.currency }}</td><td><code>{{ wallet.account.id }}</code></td>
-        <td class="num">{{ wallet.account.balance|plain }}</td>
-        <td>{% if wallet.account.is_closed %}closed{% else %}open{% endif %}</td></tr>
-    {% endfor %}
-  </table>
-  {% if missing_currencies %}
-    <form method="post" action="{% url 'pages:add-account' trader.pk %}">
-      {% csrf_token %}
-      <fieldset>
-        <legend>Add account</legend>
-        <label for="account-currency">Currency</label>
-        <select id="account-currency" name="currency">
-          {% for currency in missing_currencies %}<option>{{ currency }}</option>{% endfor %}
-        </select>
-        <button type="submit">Add account</button>
-      </fieldset>
-    </form>
-  {% endif %}
-</section>
-
-<section class="actions">
-  <h2>Actions</h2>
-  <form method="post" action="{% url 'pages:deposit' trader.pk %}">
-    {% csrf_token %}
-    <input type="hidden" name="request_id" value="{{ request_id }}">
-    <fieldset>
-      <legend>Deposit</legend>
-      <label for="deposit-currency">Currency</label>
-      <select id="deposit-currency" name="currency">
-        {% for currency in currencies %}<option>{{ currency }}</option>{% endfor %}
-      </select>
-      <label for="deposit-amount">Amount</label>
-      <input id="deposit-amount" name="amount" inputmode="decimal" placeholder="100.00" required>
-      <label for="deposit-method">Method</label>
-      <select id="deposit-method" name="method">
-        {% for value, label in deposit_methods %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
-      </select>
-      <button type="submit">Deposit</button>
-    </fieldset>
-  </form>
-
-  <form method="post" action="{% url 'pages:send' trader.pk %}">
-    {% csrf_token %}
-    <input type="hidden" name="request_id" value="{{ request_id }}">
-    <fieldset>
-      <legend>Send to another trader</legend>
-      <label for="send-to">To account number</label>
-      <input id="send-to" name="to" size="32" placeholder="pla_…" required>
-      <label for="send-amount">Amount</label>
-      <input id="send-amount" name="amount" inputmode="decimal" placeholder="10.00" required>
-      <button type="submit">Send</button>
-      <p>The currency follows the receiving account.</p>
-    </fieldset>
-  </form>
-
-  <form id="trade" method="post" action="{% url 'pages:trade' trader.pk %}">
-    {% csrf_token %}
-    <input type="hidden" name="request_id" value="{{ request_id }}">
-    <fieldset>
-      <legend>Exchange currency</legend>
-      <p>The broker keeps a {{ fee_percent }}% fee in the sold currency.</p>
-      <label for="trade-sell">Sell</label>
-      <select id="trade-sell" name="sell">
-        {% for currency in currencies %}<option{% if currency == trade_input.sell %} selected{% endif %}>{{ currency }}</option>{% endfor %}
-      </select>
-      <label for="trade-buy">Buy</label>
-      <select id="trade-buy" name="buy">
-        {% for currency in currencies %}<option{% if currency == trade_input.buy %} selected{% endif %}>{{ currency }}</option>{% endfor %}
-      </select>
-      <label for="trade-amount">Amount to sell</label>
-      <input id="trade-amount" name="amount" inputmode="decimal" placeholder="50.00" value="{{ trade_input.amount }}" required>
-      {% if preview %}
-        <p>Fee {{ preview.fee|plain }} {{ preview.sell_currency }},
-          rate {{ preview.rate|short_rate }}, you get <strong>{{ preview.buy_amount|plain }} {{ preview.buy_currency }}</strong>.</p>
-      {% elif preview_error %}
-        <p><strong>Error:</strong> {{ preview_error }}</p>
-      {% endif %}
-      <button type="submit" formaction="{% url 'pages:preview-trade' trader.pk %}">Preview</button>
-      <button type="submit">Exchange</button>
-    </fieldset>
-  </form>
-
-  <form method="post" action="{% url 'pages:withdraw' trader.pk %}">
-    {% csrf_token %}
-    <input type="hidden" name="request_id" value="{{ request_id }}">
-    <fieldset>
-      <legend>Withdraw</legend>
-      <label for="withdraw-currency">Currency</label>
-      <select id="withdraw-currency" name="currency">
-        {% for currency in currencies %}<option>{{ currency }}</option>{% endfor %}
-      </select>
-      <label for="withdraw-amount">Amount</label>
-      <input id="withdraw-amount" name="amount" inputmode="decimal" placeholder="20.00" required>
-      <label for="withdraw-method">To</label>
-      <select id="withdraw-method" name="method">
-        <option value="bank">Bank account (free)</option>
-        <option value="card">Card ({{ card_fee_percent }}% card fee)</option>
-      </select>
-      <p>Paying out to a card costs {{ card_fee_percent }}%: the card provider keeps it, so you receive less.</p>
-      <button type="submit">Withdraw</button>
-    </fieldset>
-  </form>
-
-  <form method="post" action="{% url 'pages:close-wallet' trader.pk %}">
-    {% csrf_token %}
-    <fieldset>
-      <legend>Close a wallet</legend>
-      <label for="close-currency">Currency</label>
-      <select id="close-currency" name="currency">
-        {% for currency in currencies %}<option>{{ currency }}</option>{% endfor %}
-      </select>
-      <label for="close-method">To</label>
-      <select id="close-method" name="method">
-        <option value="bank">Bank account (free)</option>
-        <option value="card">Card ({{ card_fee_percent }}% card fee)</option>
-      </select>
-      <p>Any balance is paid out first. Paying out to a card costs {{ card_fee_percent }}%: the card provider keeps it, so you receive less.</p>
-      <button type="submit">Close wallet</button>
-    </fieldset>
-  </form>
-</section>
-
-<section>
-  <h2>{{ trader.name }}'s history</h2>
-
-  <h3>Trades</h3>
-  {% if trades %}
-    <table>
-      <tr><th>#</th><th>When</th><th>Sold</th><th>Fee</th><th>Bought</th><th>Status</th></tr>
-      {% for trade in trades %}
-        <tr><td>{{ trade.pk }}</td><td>{{ trade.created_at|date:"Y-m-d H:i:s" }}</td>
-          <td class="num">{{ trade.sell_amount|plain }} {{ trade.sell_currency }}</td>
-          <td class="num">{{ trade.fee|plain }}</td>
-          <td class="num">{{ trade.buy_amount|plain }} {{ trade.buy_currency }}</td>
-          <td>{{ trade.status }}{% if trade.failure %} ({{ trade.failure }}){% endif %}</td></tr>
+    <h2>Wallets</h2>
+    <ul class="rows">
+      {% for wallet in wallets %}
+        <li>
+          <span class="coin" data-currency="{{ wallet.currency }}">{{ wallet.currency }}</span>
+          <div class="grow">
+            <strong>{{ wallet.currency|currency_name }}</strong>
+            {% if wallet.account.is_closed %}<span class="badge outline">closed</span>{% endif %}
+            <div class="sub">Account <span class="number">{{ wallet.number|account_number }}</span></div>
+          </div>
+          <div class="amount">{{ wallet.account.balance|plain }} <span class="sub">{{ wallet.currency }}</span></div>
+        </li>
       {% endfor %}
-    </table>
-  {% else %}<p>No trades yet.</p>{% endif %}
-
-  <h3>Withdrawals</h3>
-  {% if withdrawals %}
-    <table>
-      <tr><th>#</th><th>When</th><th>Amount</th><th>Status</th></tr>
-      {% for withdrawal in withdrawals %}
-        <tr><td>{{ withdrawal.pk }}</td><td>{{ withdrawal.created_at|date:"Y-m-d H:i:s" }}</td>
-          <td class="num">{{ withdrawal.amount|plain }} {{ withdrawal.currency }}</td>
-          <td>{{ withdrawal.status }}{% if withdrawal.failure %} ({{ withdrawal.failure }}){% endif %}</td></tr>
-      {% endfor %}
-    </table>
-  {% else %}<p>No withdrawals yet.</p>{% endif %}
-
-  {% for wallet in wallets %}
-    <h3>{{ wallet.currency }} statement</h3>
-    {% if wallet.statement %}
-      <table>
-        <tr><th>When</th><th>Description</th><th>Amount</th><th>Balance</th></tr>
-        {% for line in wallet.statement %}
-          <tr><td>{{ line.at|date:"Y-m-d H:i:s" }}</td><td>{{ line.description }}</td>
-            <td class="num">{{ line.amount|plain }}</td><td class="num">{{ line.balance|plain }}</td></tr>
+    </ul>
+    {% if missing_currencies %}
+      <form class="inline" method="post" action="{% url 'pages:add-account' trader.pk %}">
+        {% csrf_token %}
+        {% for currency in missing_currencies %}
+          <button type="submit" class="outline" name="currency" value="{{ currency }}">+ {{ currency|currency_name }} wallet</button>
         {% endfor %}
-      </table>
-    {% else %}<p>No movements.</p>{% endif %}
-  {% endfor %}
-</section>
+      </form>
+    {% endif %}
+
+    <h2>Activity</h2>
+    <ot-tabs>
+      <div role="tablist">
+        {% for wallet in wallets %}<button role="tab">{{ wallet.currency }}</button>{% endfor %}
+        <button role="tab">Trades</button>
+        <button role="tab">Withdrawals</button>
+      </div>
+      {% for wallet in wallets %}
+        <div role="tabpanel">
+          {% if wallet.statement %}
+            <ul class="rows">
+              {% for line in wallet.statement reversed %}
+                {% ifchanged line.at.date %}<li class="day">{{ line.at|date:"l, M j" }}</li>{% endifchanged %}
+                <li>
+                  <span class="icon{% if line.amount > 0 %} in{% endif %}" aria-hidden="true">{% if line.amount > 0 %}↓{% else %}↑{% endif %}</span>
+                  <div class="grow">{{ line.description|capfirst }}<div class="sub">{{ line.at|date:"H:i:s" }}</div></div>
+                  <div class="amount{% if line.amount > 0 %} credit{% endif %}">{{ line.amount|signed }} {{ wallet.currency }}<div class="sub">{{ line.balance|plain }}</div></div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}<p class="sub">No movements.</p>{% endif %}
+        </div>
+      {% endfor %}
+      <div role="tabpanel">
+        {% if trades %}
+          <ul class="rows">
+            {% for trade in trades %}
+              <li>
+                <span class="icon trade" aria-hidden="true">⇄</span>
+                <div class="grow">Trade {{ trade.pk }}: {{ trade.sell_currency }} → {{ trade.buy_currency }}
+                  <div class="sub">{{ trade.created_at|date:"M j, H:i:s" }} · fee {{ trade.fee|plain }} · {{ trade.status }}{% if trade.failure %} ({{ trade.failure }}){% endif %}</div></div>
+                <div class="amount">{{ trade.buy_amount|plain }} {{ trade.buy_currency }}<div class="sub">−{{ trade.sell_amount|plain }} {{ trade.sell_currency }}</div></div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}<p class="sub">No trades yet.</p>{% endif %}
+      </div>
+      <div role="tabpanel">
+        {% if withdrawals %}
+          <ul class="rows">
+            {% for withdrawal in withdrawals %}
+              <li>
+                <span class="icon" aria-hidden="true">↑</span>
+                <div class="grow">Withdrawal {{ withdrawal.pk }}
+                  <div class="sub">{{ withdrawal.created_at|date:"M j, H:i:s" }} · {{ withdrawal.status }}{% if withdrawal.failure %} ({{ withdrawal.failure }}){% endif %}</div></div>
+                <div class="amount">{{ withdrawal.amount|plain }} {{ withdrawal.currency }}</div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}<p class="sub">No withdrawals yet.</p>{% endif %}
+      </div>
+    </ot-tabs>
+  </div>
+
+  <aside class="panel">
+    <ot-tabs>
+      <div role="tablist">
+        <button role="tab"{% if preview or preview_error or trade_input.amount %} aria-selected="true"{% endif %}>Exchange</button>
+        <button role="tab">Deposit</button>
+        <button role="tab">Send</button>
+        <button role="tab">Withdraw</button>
+        <button role="tab">Close</button>
+      </div>
+
+      <div role="tabpanel">
+        {% if currencies|length < 2 %}
+          <p class="sub">Exchanging needs two wallets: open another wallet first.</p>
+        {% else %}
+          <form id="trade" method="post" action="{% url 'pages:trade' trader.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="request_id" value="{{ request_id }}">
+            <label for="trade-sell">Sell</label>
+            <select id="trade-sell" name="sell">
+              {% for currency in currencies %}<option{% if currency == trade_input.sell %} selected{% endif %}>{{ currency }}</option>{% endfor %}
+            </select>
+            <label for="trade-buy">Buy</label>
+            <select id="trade-buy" name="buy">
+              {% for currency in currencies %}<option{% if currency == trade_input.buy %} selected{% endif %}>{{ currency }}</option>{% endfor %}
+            </select>
+            <label for="trade-amount">Amount to sell</label>
+            <input id="trade-amount" name="amount" inputmode="decimal" placeholder="50.00" value="{{ trade_input.amount }}" required>
+            {% if preview %}
+              <p class="quote">Fee {{ preview.fee|plain }} {{ preview.sell_currency }} · rate {{ preview.rate|short_rate }}<br>
+                You get <strong>{{ preview.buy_amount|plain }} {{ preview.buy_currency }}</strong></p>
+            {% elif preview_error %}
+              <p class="quote"><strong>Error:</strong> {{ preview_error }}</p>
+            {% endif %}
+            <p class="sub">The broker keeps a {{ fee_percent }}% fee in the sold currency.</p>
+            <div class="buttons">
+              <button type="submit" class="outline" formaction="{% url 'pages:preview-trade' trader.pk %}">Preview</button>
+              <button type="submit">Exchange</button>
+            </div>
+          </form>
+        {% endif %}
+      </div>
+
+      <div role="tabpanel">
+        <form method="post" action="{% url 'pages:deposit' trader.pk %}">
+          {% csrf_token %}
+          <input type="hidden" name="request_id" value="{{ request_id }}">
+          <label for="deposit-currency">Currency</label>
+          <select id="deposit-currency" name="currency">
+            {% for currency in fiat_currencies %}<option>{{ currency }}</option>{% endfor %}
+          </select>
+          <label for="deposit-amount">Amount</label>
+          <input id="deposit-amount" name="amount" inputmode="decimal" placeholder="100.00" required>
+          <label for="deposit-method">Method</label>
+          <select id="deposit-method" name="method">
+            {% for value, label in deposit_methods %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+          </select>
+          <button type="submit">Deposit</button>
+        </form>
+      </div>
+
+      <div role="tabpanel">
+        <form method="post" action="{% url 'pages:send' trader.pk %}">
+          {% csrf_token %}
+          <input type="hidden" name="request_id" value="{{ request_id }}">
+          <label for="send-to">To account number</label>
+          <input id="send-to" name="to" inputmode="numeric" autocomplete="off" placeholder="1234 5678 90" required>
+          <label for="send-amount">Amount</label>
+          <input id="send-amount" name="amount" inputmode="decimal" placeholder="10.00" required>
+          <p class="sub">The currency follows the receiving account.</p>
+          <button type="submit">Send</button>
+        </form>
+      </div>
+
+      <div role="tabpanel">
+        <form method="post" action="{% url 'pages:withdraw' trader.pk %}">
+          {% csrf_token %}
+          <input type="hidden" name="request_id" value="{{ request_id }}">
+          <label for="withdraw-currency">Currency</label>
+          <select id="withdraw-currency" name="currency">
+            {% for currency in fiat_currencies %}<option>{{ currency }}</option>{% endfor %}
+          </select>
+          <label for="withdraw-amount">Amount</label>
+          <input id="withdraw-amount" name="amount" inputmode="decimal" placeholder="20.00" required>
+          <label for="withdraw-method">To</label>
+          <select id="withdraw-method" name="method">
+            <option value="bank">Bank account (free)</option>
+            <option value="card">Card ({{ card_fee_percent }}% card fee)</option>
+          </select>
+          <p class="sub">Paying out to a card costs {{ card_fee_percent }}%: the card provider keeps it, so you receive less.</p>
+          <button type="submit">Withdraw</button>
+        </form>
+      </div>
+
+      <div role="tabpanel">
+        <form method="post" action="{% url 'pages:close-wallet' trader.pk %}">
+          {% csrf_token %}
+          <label for="close-currency">Wallet</label>
+          <select id="close-currency" name="currency">
+            {% for currency in currencies %}<option>{{ currency }}</option>{% endfor %}
+          </select>
+          <label for="close-method">Pay out to</label>
+          <select id="close-method" name="method">
+            <option value="bank">Bank account (free)</option>
+            <option value="card">Card ({{ card_fee_percent }}% card fee)</option>
+          </select>
+          <p class="sub">Any balance is paid out first; sell crypto before closing its wallet. Paying out to a card costs {{ card_fee_percent }}%: the card provider keeps it, so you receive less.</p>
+          <button type="submit" class="outline">Close wallet</button>
+        </form>
+      </div>
+    </ot-tabs>
+  </aside>
+</div>
 {% endblock %}

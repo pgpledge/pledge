@@ -1,0 +1,28 @@
+{% extends "exchange/base.html" %}
+{% block title %}New trader{% endblock %}
+{% block back %}
+<nav class="crumbs" aria-label="Breadcrumb">
+  <a class="back" href="{% url 'pages:traders' %}" aria-label="Back to traders">←</a>
+  <a href="{% url 'pages:home' %}">Overview</a> › <a href="{% url 'pages:traders' %}">Traders</a> › <span>New trader</span>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="narrow">
+  <h1>Open a trader account</h1>
+  <p class="sub lead">The trader gets a EUR wallet on the ledger straight away. Add USD or BTC wallets later
+    from the trader's page.</p>
+  <div class="panel static">
+    <form method="post" action="{% url 'pages:create-trader' %}">
+      {% csrf_token %}
+      <input type="hidden" name="request_id" value="{{ request_id }}">
+      <label for="name">Name</label>
+      <input id="name" name="name" maxlength="100" placeholder="Alice" autofocus required>
+      <p class="sub">1 to 100 characters, unique across the exchange.</p>
+      <div class="buttons">
+        <a class="button outline" href="{% url 'pages:traders' %}">Cancel</a>
+        <button type="submit">Open wallets</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

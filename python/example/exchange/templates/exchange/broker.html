@@ -1,0 +1,86 @@
+{% extends "exchange/base.html" %}
+{% load exchange_format %}
+{% block title %}Broker accounts{% endblock %}
+{% block back %}
+<nav class="crumbs" aria-label="Breadcrumb">
+  <a class="back" href="{% url 'pages:home' %}" aria-label="Back to overview">←</a>
+  <a href="{% url 'pages:home' %}">Overview</a> › <span>Broker accounts</span>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="intro">
+  <h1>Broker accounts</h1>
+  <p class="sub lead">The exchange's own ledger accounts, five per currency. Money outside the exchange shows as
+    negative: our bank, the card provider and its fees.</p>
+</div>
+
+<ot-tabs>
+  <div role="tablist">
+    {% for section in sections %}<button role="tab">{{ section.currency|currency_name }}</button>{% endfor %}
+  </div>
+  {% for section in sections %}
+    <div role="tabpanel">
+      <div class="layout">
+        <div>
+          <h2>Accounts</h2>
+          <ul class="rows">
+            {% for house in section.accounts %}
+              <li>
+                <span class="coin" data-currency="{{ section.currency }}">{{ section.currency }}</span>
+                <div class="grow"><strong>{{ house.get_kind_display }}</strong>
+                  <div class="sub"><code>{{ house.account.id }}</code></div></div>
+                <div class="amount">{{ house.account.balance|plain }} <span class="sub">{{ section.currency }}</span></div>
+              </li>
+            {% empty %}
+              <li class="sub">No accounts yet: they open on first use.</li>
+            {% endfor %}
+          </ul>
+
+          <h2>Recent movements</h2>
+          {% if section.movements %}
+            <ul class="rows">
+              {% for line in section.movements %}
+                {% ifchanged line.at.date %}<li class="day">{{ line.at|date:"l, M j" }}</li>{% endifchanged %}
+                <li>
+                  <span class="icon{% if line.amount > 0 %} in{% endif %}" aria-hidden="true">{% if line.amount > 0 %}↓{% else %}↑{% endif %}</span>
+                  <div class="grow">{{ line.description|capfirst }}
+                    <div class="sub">{{ line.account }} · {{ line.at|date:"H:i:s" }}</div></div>
+                  <div class="amount{% if line.amount > 0 %} credit{% endif %}">{{ line.amount|signed }} {{ section.currency }}
+                    <div class="sub">{{ line.balance|plain }}</div></div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}<p class="sub">No movements yet.</p>{% endif %}
+        </div>
+
+        <aside class="panel">
+          <h3>Card provider</h3>
+          {% if section.currency in crypto %}
+            <p class="sub">{{ section.currency }} is only bought and sold on the exchange; it never moves through
+              the card provider.</p>
+          {% else %}
+            <p class="sub">Card deposits wait at the card provider until it pays out to our bank. The provider keeps
+              {{ card_fee_percent }}% of every card payment, booked as card costs.</p>
+            <p class="holding">
+              <span class="sub">Holds</span>
+              <strong>{{ section.card_holds|plain }} {{ section.currency }}</strong>
+            </p>
+            <form method="post" action="{% url 'pages:payout' %}">
+              {% csrf_token %}
+              <input type="hidden" name="currency" value="{{ section.currency }}">
+              <button type="submit"{% if not section.card_holds %} disabled{% endif %}>
+                Pay out {{ section.currency }} to our bank</button>
+            </form>
+          {% endif %}
+          <hr>
+          <form method="post" action="{% url 'pages:payout' %}">
+            {% csrf_token %}
+            <button type="submit" class="outline">Pay out all currencies</button>
+          </form>
+          <p class="sub">Settles EUR and USD with the card provider at once.</p>
+        </aside>
+      </div>
+    </div>
+  {% endfor %}
+</ot-tabs>
+{% endblock %}

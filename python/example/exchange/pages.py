@@ -8,18 +8,19 @@ from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Count
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 import django_pledge as pledge
 from django_pledge import TransferId
-from django_pledge.models import Account, Transfer
+from django_pledge.models import Account, Entry, Transfer
 
 from . import services
-from .models import Trade, Trader, WalletAccount, Withdrawal
-from .templatetags.exchange_format import plain
+from .models import HouseAccount, Trade, Trader, WalletAccount, Withdrawal, describe_transfer
+from .templatetags.exchange_format import account_number, plain
 
 
 def new_request_id() -> str:
@@ -155,7 +156,8 @@ def ledger_action(
 def home(request: HttpRequest) -> HttpResponse:
     checks = Account.objects.verify()
     context = {
-        "traders": Trader.objects.all(),
+        "traders": Trader.objects.order_by("-created_at")[:5],
+        "trader_count": Trader.objects.count(),
         "totals": services.ledger_totals(),
         "failed_checks": [check for check in checks if not check.ok],
         "check_count": len(checks),
@@ -164,24 +166,79 @@ def home(request: HttpRequest) -> HttpResponse:
     return render(request, "exchange/home.html", context)
 
 
+@require_GET
+def broker(request: HttpRequest) -> HttpResponse:
+    houses = HouseAccount.objects.select_related("account")
+    sections = []
+    for currency in services.currencies():
+        accounts = [house for house in houses if house.currency == currency]
+        entries = (
+            Entry.objects.filter(account_id__in=[house.account_id for house in accounts])
+            .select_related("transfer")
+            .order_by("-created_at", "-account_version")[:15]
+        )
+        names = {house.account_id: house.get_kind_display() for house in accounts}
+        sections.append(
+            {
+                "currency": currency,
+                "accounts": accounts,
+                # The card account goes negative by what the provider holds for us.
+                "card_holds": -sum(
+                    (h.account.balance for h in accounts if h.kind == HouseAccount.Kind.CARD),
+                    Decimal(0),
+                ),
+                "movements": [
+                    {
+                        "at": entry.created_at,
+                        "account": names[entry.account_id],
+                        "description": describe_transfer(entry.transfer),
+                        "amount": entry.amount,
+                        "balance": entry.account_current_balance,
+                    }
+                    for entry in entries
+                ],
+            }
+        )
+    context = {
+        "sections": sections,
+        "crypto": settings.EXCHANGE_CRYPTO,
+        "card_fee_percent": plain((Decimal(settings.EXCHANGE_CARD_FEE_RATE) * 100).normalize()),
+    }
+    return render(request, "exchange/broker.html", context)
+
+
 @require_POST
 def payout(request: HttpRequest) -> HttpResponse:
-    paid = {c: transfer for c in services.currencies() if (transfer := services.payout(c))}
+    chosen = request.POST.get("currency")
+    if chosen and chosen not in services.currencies():
+        messages.error(request, f"unknown currency {chosen!r}")
+        return redirect("pages:broker")
+    selected = [chosen] if chosen else services.currencies()
+    paid = {c: transfer for c in selected if (transfer := services.payout(c))}
     if paid:
         amounts = ", ".join(f"{plain(t.amount)} {c}" for c, t in paid.items())
         messages.success(request, f"The card provider paid out {amounts} to our bank account.")
     else:
         messages.info(request, "The card provider holds nothing to pay out.")
-    return redirect("pages:home")
+    return redirect("pages:broker")
 
 
-@require_POST
+@require_GET
+def traders(request: HttpRequest) -> HttpResponse:
+    traders = Trader.objects.annotate(wallet_count=Count("wallets")).order_by("name")
+    return render(request, "exchange/traders.html", {"traders": traders})
+
+
+@require_http_methods(["GET", "POST"])
 def create_trader(request: HttpRequest) -> HttpResponse:
+    if request.method != "POST":
+        context = {"request_id": new_request_id()}
+        return render(request, "exchange/new_trader.html", context)
     try:
         data = cleaned(TraderForm, request.POST)
     except ValueError as exc:
         messages.error(request, explain(exc))
-        return redirect("pages:home")
+        return redirect("pages:create-trader")
     # The session remembers which request created which trader, so a double submit is harmless.
     created: dict[str, int] = request.session.get("created_traders", {})
     if trader_id := created.get(data["request_id"]):
@@ -191,16 +248,21 @@ def create_trader(request: HttpRequest) -> HttpResponse:
         trader = services.sign_up(data["name"], wallet_currencies=["EUR"])
     except ValueError as exc:
         messages.error(request, explain(exc))
-        return redirect("pages:home")
+        return redirect("pages:create-trader")
     request.session["created_traders"] = {**created, data["request_id"]: trader.pk}
     messages.success(request, f"Welcome, {trader.name}. Your EUR account is open.")
     return redirect("pages:trader", trader.pk)
 
 
 def wallet_overview(trader: Trader) -> list[dict[str, Any]]:
-    accounts = WalletAccount.objects.filter(wallet__trader=trader)
+    accounts = WalletAccount.objects.filter(wallet__trader=trader).select_related("wallet")
     return [
-        {"currency": account.currency, "account": account, "statement": account.statement()}
+        {
+            "currency": account.currency,
+            "number": account.wallet.number,
+            "account": account,
+            "statement": account.statement(),
+        }
         for account in sorted(accounts, key=lambda account: account.currency)
     ]
 
@@ -231,7 +293,8 @@ def add_account(request: HttpRequest, trader_id: int) -> HttpResponse:
     except ValueError as exc:
         messages.error(request, explain(exc))
     else:
-        messages.success(request, f"{currency} account {wallet.account_id} opened.")
+        number = account_number(wallet.number)
+        messages.success(request, f"Your {currency} wallet is open: account {number}.")
     return redirect("pages:trader", trader.pk)
 
 
@@ -244,6 +307,7 @@ def trader_page(request: HttpRequest, trader_id: int) -> HttpResponse:
         "trader": trader,
         "wallets": wallets,
         "currencies": [wallet["currency"] for wallet in wallets],
+        "fiat_currencies": services.fiat_currencies(),
         "deposit_methods": services.DEPOSIT_METHODS.items(),
         "fee_percent": plain((Decimal(settings.EXCHANGE_FEE_RATE) * 100).normalize()),
         "card_fee_percent": plain((Decimal(settings.EXCHANGE_CARD_FEE_RATE) * 100).normalize()),
@@ -258,7 +322,9 @@ def trader_page(request: HttpRequest, trader_id: int) -> HttpResponse:
         "preview_error": preview_error,
         "trade_input": {
             "sell": request.GET.get("sell", "EUR"),
-            "buy": request.GET.get("buy", "BTC"),
+            # default to a wallet the trader has that differs from the sell side
+            "buy": request.GET.get("buy")
+            or next((w["currency"] for w in wallets if w["currency"] != "EUR"), "BTC"),
             "amount": request.GET.get("amount", ""),
         },
         "request_id": new_request_id(),

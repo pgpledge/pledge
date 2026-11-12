@@ -1,59 +1,32 @@
-<!doctype html>
+{% load static %}<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Exchange{% endblock %} · pledge example</title>
-  <style>
-    :root { --ink: #1c1c1c; --muted: #5f5f5f; --line: #e3e3e0; --soft: #f6f6f3; --accent: #18794a;
-            --good: #18794a; --bad: #b42318; }
-    * { box-sizing: border-box; }
-    body { margin: 0; background: var(--soft); color: var(--ink);
-           font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-    header { background: #fff; border-bottom: 1px solid var(--line); padding: 12px 16px; }
-    header a { color: var(--accent); font-weight: 650; text-decoration: none; }
-    main { max-width: 980px; margin: 0 auto; padding: 16px; }
-    h1 { font-size: 24px; margin: 8px 0 4px; }
-    h2 { font-size: 17px; margin: 0 0 12px; color: var(--accent); }
-    h3 { font-size: 15px; margin: 20px 0 8px; }
-    a { color: var(--accent); }
-    section { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px;
-              margin: 16px 0; }
-    section.actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-                      gap: 12px; }
-    section.actions h2 { grid-column: 1 / -1; margin: 0; }
-    fieldset { border: 1px solid var(--line); border-radius: 8px; margin: 0; padding: 12px 14px;
-               display: grid; grid-template-columns: max-content 1fr; gap: 8px 12px;
-               align-items: center; align-content: start; }
-    legend { font-weight: 600; padding: 0 4px; }
-    fieldset p { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 13px; }
-    fieldset button { grid-column: 1 / -1; justify-self: start; }
-    fieldset button[formaction] + button { grid-column: auto; }
-    input, select, button { font: inherit; padding: 6px 9px; border: 1px solid #c9c9c4;
-                            border-radius: 6px; background: #fff; }
-    input, select { min-width: 0; width: 100%; }
-    button { background: var(--accent); border-color: var(--accent); color: #fff; cursor: pointer; }
-    button[formaction] { background: #fff; color: var(--accent); }
-    table { border-collapse: collapse; width: 100%; font-size: 14px; }
-    th { text-align: left; color: var(--muted); font-weight: 600; background: var(--soft); }
-    th, td { border-bottom: 1px solid var(--line); padding: 6px 10px; }
-    td.num { text-align: right; font-variant-numeric: tabular-nums; }
-    code { font-size: 13px; }
-    ul.messages { list-style: none; padding: 0; margin: 0 0 8px; }
-    ul.messages li { background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--muted);
-                     border-radius: 6px; padding: 8px 12px; margin: 6px 0; }
-    ul.messages li.success { border-left-color: var(--good); }
-    ul.messages li.error { border-left-color: var(--bad); }
-  </style>
+  <link rel="stylesheet" href="{% static 'exchange/vendor/oat/oat.min.css' %}">
+  <script src="{% static 'exchange/vendor/oat/oat.min.js' %}" defer></script>
+  <link rel="stylesheet" href="{% static 'exchange/theme.css' %}">
+  <link rel="stylesheet" href="{% static 'exchange/app.css' %}">
 </head>
 <body>
-  <header><a href="{% url 'pages:home' %}">Exchange</a>{% block crumb %}{% endblock %}</header>
+  <header>
+    <a class="brand" href="{% url 'pages:home' %}">Exchange</a>
+    <nav>
+      {% with name=request.resolver_match.url_name %}
+        <a href="{% url 'pages:home' %}"{% if name == "home" %} aria-current="page"{% endif %}>Overview</a>
+        <a href="{% url 'pages:traders' %}"{% if name == "traders" or name == "trader" %} aria-current="page"{% endif %}>Traders</a>
+        <a href="{% url 'pages:broker' %}"{% if name == "broker" %} aria-current="page"{% endif %}>Broker</a>
+      {% endwith %}
+    </nav>
+  </header>
   <main>
-    {% if messages %}
-      <ul class="messages">
-        {% for message in messages %}<li class="{{ message.tags }}"><strong>{{ message.tags|capfirst }}:</strong> {{ message }}</li>{% endfor %}
-      </ul>
-    {% endif %}
+    {% for message in messages %}
+      <div role="alert" data-variant="{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}">
+        <strong>{{ message.tags|capfirst }}:</strong> {{ message }}
+      </div>
+    {% endfor %}
+    {% block back %}{% endblock %}
     {% block content %}{% endblock %}
   </main>
 </body>

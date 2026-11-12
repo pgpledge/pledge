@@ -6,7 +6,9 @@ app_name = "pages"
 
 urlpatterns = [
     path("", pages.home, name="home"),
+    path("broker/", pages.broker, name="broker"),
     path("payout/", pages.payout, name="payout"),
+    path("traders/", pages.traders, name="traders"),
     path("traders/new/", pages.create_trader, name="create-trader"),
     path("traders/<int:trader_id>/", pages.trader_page, name="trader"),
     path("traders/<int:trader_id>/accounts/", pages.add_account, name="add-account"),

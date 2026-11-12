@@ -1,0 +1,127 @@
+/* Layout and components of the example pages, on top of oat and theme.css. */
+body { background: var(--background); }
+body > header { display: flex; align-items: center; gap: 32px; height: 64px;
+                border-bottom: 1px solid var(--border);
+                padding: 0 max(24px, calc((100% - 1180px) / 2 + 24px)); }
+.brand { color: var(--foreground); font-weight: 700; font-size: 18px; text-decoration: none; white-space: nowrap; }
+.brand::before { content: ""; display: inline-block; width: 24px; height: 24px; margin-right: 10px;
+                 vertical-align: -5px; border-radius: 50%; background: var(--primary); }
+body > header nav { display: flex; gap: 24px; flex: 1; }
+body > header nav a { color: var(--muted-foreground); font-weight: 600; text-decoration: none;
+                      padding: 20px 0; border-bottom: 2px solid transparent; }
+body > header nav a:hover, body > header nav a[aria-current] { color: var(--foreground); }
+body > header nav a[aria-current] { border-bottom-color: var(--primary); }
+a.button { border-radius: var(--radius-full); min-height: 40px; padding: 0 20px; font-weight: 600; }
+.crumbs { display: flex; align-items: center; gap: 8px; margin: 0 0 24px; font-size: 14px;
+          color: var(--muted-foreground); }
+.crumbs a { color: var(--muted-foreground); text-decoration: none; font-weight: 600; }
+.crumbs a:hover { color: var(--foreground); }
+.crumbs .back { display: inline-grid; place-items: center; width: 32px; height: 32px; margin-right: 4px;
+                border-radius: 50%; background: var(--muted); color: var(--foreground); font-size: 18px; }
+.section-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
+.section-head a { white-space: nowrap; }
+.section-head a { font-weight: 600; text-decoration: none; }
+.narrow { max-width: 480px; margin: 24px auto 0; }
+.holding { display: flex; justify-content: space-between; align-items: baseline; font-size: 20px;
+           padding: 12px 0; border-block: 1px solid var(--border); }
+.panel form > button { width: 100%; }
+.panel > a.button { width: 100%; min-height: 48px; }
+.narrow .panel { position: static; margin-top: 24px; }
+a.button.outline { min-height: 48px; }
+@media (max-width: 640px) { body > header { gap: 16px; } body > header nav { gap: 16px; } }
+main { max-width: 1180px; margin: 0 auto; padding: 32px 24px 64px; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 56px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; gap: 32px; } }
+h1 { font-size: 32px; font-weight: 600; letter-spacing: -.02em; margin: 0; }
+h2 { font-size: 20px; font-weight: 600; margin: 48px 0 8px; }
+h3 { font-size: 16px; font-weight: 600; margin: 0 0 4px; }
+.title { display: flex; align-items: center; gap: 16px; }
+.title .sub, .lead { margin: 4px 0 0; }
+.lead { max-width: 60ch; font-size: 16px; }
+.sub { color: var(--muted-foreground); font-size: 14px; font-weight: 400; }
+.rows { list-style: none; padding: 0; margin: 0; }
+.rows li { position: relative; display: flex; align-items: center; gap: 16px; padding: 14px 0; }
+/* inset divider: starts after the 40px icon, like a phone app list */
+.rows li + li:not(.day)::before { content: ""; position: absolute; top: 0; left: 56px; right: 0;
+                                  border-top: 1px solid var(--border); }
+.rows li.day + li::before { display: none; }
+.rows li.day { padding: 24px 0 6px; font-size: 13px; font-weight: 600; color: var(--muted-foreground); }
+.rows li.day:first-child { padding-top: 8px; }
+.rows.links li { padding: 0; }
+.rows.links li + li::before { left: 68px; }
+.rows.links a { display: flex; flex: 1; align-items: center; gap: 16px; padding: 14px 12px; margin: 0 -12px;
+                border-radius: var(--radius-medium); color: var(--foreground); text-decoration: none;
+                transition: background-color var(--transition-fast); }
+.rows.links a:hover { background: var(--muted); }
+.rows.links li:hover::before, .rows.links li:hover + li::before { border-color: transparent; }
+.rows .grow strong, .rows .grow > :first-child { font-weight: 600; }
+.rows .grow .sub, .amount div.sub { display: block; font-size: 13px; margin-top: 2px; font-weight: 400; }
+.icon { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+        font-size: 18px; font-weight: 700; background: var(--muted); color: var(--muted-foreground); }
+.icon.in { background: light-dark(#e3f7ee, #08311f); color: var(--success); }
+.icon.trade { background: light-dark(#e6edff, #0b1c46); color: var(--primary); }
+.chevron { color: var(--muted-foreground); font-size: 24px; line-height: 1; }
+.grow { flex: 1; min-width: 0; }
+.amount { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.coin { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+        font-size: 12px; font-weight: 700; background: var(--muted); }
+.coin.large { width: 56px; height: 56px; font-size: 22px; background: var(--primary); color: var(--primary-foreground); }
+.coin.small { width: 28px; height: 28px; font-size: 9px; }
+.coin[data-currency=EUR] { background: light-dark(#d3e1ff, #002982); }
+.coin[data-currency=USD] { background: light-dark(#cbf5e3, #04462a); }
+.coin[data-currency=BTC] { background: light-dark(#ffe3c2, #5c3200); }
+.pair { display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; }
+.intro { margin-bottom: 48px; }
+.intro + .layout h2:first-child { margin-top: 0; }
+.number { font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+code { background: none; padding: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
+[role=tablist] { display: flex; width: 100%; gap: 24px; padding: 0; background: none; border-radius: 0;
+                 border-bottom: 1px solid var(--border); overflow-x: auto; }
+[role=tab] { padding: 12px 0; margin-bottom: -1px; border-radius: 0; font-size: 15px; font-weight: 600;
+             color: var(--muted-foreground); border-bottom: 2px solid transparent; }
+[role=tab][aria-selected=true] { color: var(--foreground); background: none; box-shadow: none;
+                                 border-bottom-color: var(--primary); }
+.panel { position: sticky; top: 24px; border: 1px solid var(--border); border-radius: var(--radius-large);
+         padding: 8px 24px 24px; }
+.panel > h3:first-child { margin-top: 16px; }
+.panel [role=tablist] { gap: 16px; }
+.panel [role=tab] { font-size: 14px; }
+form { display: grid; gap: 6px; }
+form label { font-weight: 600; font-size: 14px; margin-top: 8px; }
+form p { margin: 4px 0; }
+input, select { min-height: 48px; }
+button:not([role=tab]) { border-radius: var(--radius-full); min-height: 48px; padding: 0 24px; font-weight: 600; }
+form > button, .buttons { margin-top: 12px; }
+.buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+form.inline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
+form.inline label { margin: 0; }
+form.inline select { width: auto; margin: 0; }
+.quote { background: var(--muted); border-radius: var(--radius-medium); padding: 12px 16px; }
+hr { border: 0; border-top: 1px solid var(--border); margin: 24px 0; }
+.table { border: 1px solid var(--border); border-radius: var(--radius-large); overflow-x: auto; }
+.table table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 0; }
+.table th { padding: 12px 16px; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+            color: var(--muted-foreground); background: var(--muted); border-bottom: 1px solid var(--border);
+            white-space: nowrap; }
+.table td { padding: 16px; border-bottom: 1px solid var(--border); background: var(--background);
+            transition: background-color var(--transition-fast); }
+.table tbody tr:last-child td { border-bottom: 0; }
+.table tbody tr:hover td { background: light-dark(#f7f8fa, #14161a); }
+/* the first column stays put when the table scrolls sideways on a phone */
+.table th:first-child, .table td:first-child { position: sticky; left: 0; z-index: 1; }
+.table .total { font-weight: 700; border-left: 1px solid var(--border); }
+.table .negative { color: var(--muted-foreground); }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+[role=alert] { margin-bottom: 24px; }
+[role=tabpanel] > .layout > div > h2:first-child { margin-top: 8px; }
+[role=tabpanel] > .layout > .panel { margin-top: 16px; }
+.credit { color: var(--success); }
+@media (max-width: 480px) {
+  body > header { gap: 16px; padding-inline: 16px; }
+  body > header nav { gap: 14px; }
+  .brand { font-size: 16px; }
+  .brand::before { width: 20px; height: 20px; margin-right: 8px; }
+  main { padding-inline: 16px; }
+  h1 { font-size: 28px; }
+}
+.table + p { margin-top: 12px; }

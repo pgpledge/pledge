@@ -2,56 +2,76 @@
 {% load exchange_format %}
 {% block title %}Exchange{% endblock %}
 {% block content %}
-<h1>Exchange</h1>
+<div class="intro">
+  <h1>Overview</h1>
+  <p class="sub lead">A small currency exchange on the pledge ledger. Every transfer moves money between two
+    accounts, so every currency below sums to zero.</p>
 
-<section>
-  <h2>Traders</h2>
-  {% if traders %}
-    <ul>
-      {% for trader in traders %}
-        <li><a href="{% url 'pages:trader' trader.pk %}">{{ trader.name }}</a> (since {{ trader.created_at|date:"Y-m-d" }})</li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>No traders yet.</p>
-  {% endif %}
-  <form method="post" action="{% url 'pages:create-trader' %}">
-    {% csrf_token %}
-    <input type="hidden" name="request_id" value="{{ request_id }}">
-    <fieldset>
-      <legend>New trader</legend>
-      <label for="name">Name</label>
-      <input id="name" name="name" maxlength="100" required>
-      <button type="submit">Open wallets</button>
-    </fieldset>
-  </form>
-</section>
+  <div class="section-head">
+    <h2>Broker accounts</h2>
+    <a href="{% url 'pages:broker' %}">Details →</a>
+  </div>
+  <div class="table">
+    <table>
+      <thead>
+        <tr><th>Currency</th><th class="num">All traders</th><th class="num">Liquidity</th><th class="num">Fees</th><th class="num">Card provider</th><th class="num">Our bank</th><th class="num">Card costs</th><th class="num total">Sum</th></tr>
+      </thead>
+      <tbody>
+        {% for currency, row in totals.items %}
+        <tr>
+          <td><span class="pair"><span class="coin small" data-currency="{{ currency }}">{{ currency }}</span><strong>{{ currency|currency_name }}</strong></span></td>
+          <td class="num {{ row.customers|negative }}">{{ row.customers|plain }}</td>
+          <td class="num {{ row.liquidity|negative }}">{{ row.liquidity|plain }}</td>
+          <td class="num {{ row.fees|negative }}">{{ row.fees|plain }}</td>
+          <td class="num {{ row.card|negative }}">{{ row.card|plain }}</td>
+          <td class="num {{ row.bank|negative }}">{{ row.bank|plain }}</td>
+          <td class="num {{ row.card_costs|negative }}">{{ row.card_costs|plain }}</td>
+          <td class="num total">{{ row.sum|plain }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="sub">Money outside the exchange shows as negative: card deposits wait at the card provider until it
+    pays out to our bank, and card costs are the provider's fees the broker pays.</p>
 
-<section>
-  <h2>Broker ledger</h2>
-  <p>The broker's own accounts per currency, next to what all traders hold together.</p>
-  <table>
-    <tr><th>Currency</th><th>All traders</th><th>Liquidity</th><th>Fees</th><th>Card provider</th><th>Our bank</th><th>Card costs</th><th>Sum</th></tr>
-    {% for currency, row in totals.items %}
-      <tr><td>{{ currency }}</td><td class="num">{{ row.customers|plain }}</td>
-        <td class="num">{{ row.liquidity|plain }}</td><td class="num">{{ row.fees|plain }}</td>
-        <td class="num">{{ row.card|plain }}</td><td class="num">{{ row.bank|plain }}</td>
-        <td class="num">{{ row.card_costs|plain }}</td><td class="num">{{ row.sum|plain }}</td></tr>
-    {% endfor %}
-  </table>
-  <p>Money outside the exchange shows as negative: card deposits wait at the card provider until it pays out to our bank, and card costs are the provider's fees the broker pays.</p>
-  <form method="post" action="{% url 'pages:payout' %}">
-    {% csrf_token %}
-    <button type="submit">Card provider pays out</button>
-  </form>
-  <p>
-    {% if failed_checks %}
-      <strong>Ledger verification failed:</strong>
-      {% for check in failed_checks %}{{ check.check_name }} ({{ check.detail }}){% if not forloop.last %}, {% endif %}{% endfor %}
+</div>
+
+<div class="layout">
+  <div>
+    <div class="section-head">
+      <h2>Newest traders</h2>
+      <a href="{% url 'pages:traders' %}">View all {{ trader_count }} →</a>
+    </div>
+    {% if traders %}
+      <ul class="rows links">
+        {% for trader in traders %}
+          <li><a href="{% url 'pages:trader' trader.pk %}">
+            <span class="coin">{{ trader.name|first|upper }}</span>
+            <span class="grow"><strong>{{ trader.name }}</strong>
+              <span class="sub">since {{ trader.created_at|date:"M j, Y" }}</span></span>
+            <span class="chevron" aria-hidden="true">›</span>
+          </a></li>
+        {% endfor %}
+      </ul>
     {% else %}
-      <strong>Ledger verified:</strong> all {{ check_count }} checks of pledge.verify() pass.
+      <p class="sub">No traders yet. <a href="{% url 'pages:create-trader' %}">Open the first one.</a></p>
     {% endif %}
-  </p>
-  <p>Every transfer moves money between two of these accounts, so every currency sums to zero.</p>
-</section>
+  </div>
+
+  <aside class="panel">
+    <h3>Ledger</h3>
+    {% if failed_checks %}
+      <p><span class="badge" data-variant="danger">verification failed</span></p>
+      <p class="sub">{% for check in failed_checks %}{{ check.check_name }} ({{ check.detail }}){% if not forloop.last %}, {% endif %}{% endfor %}</p>
+    {% else %}
+      <p class="sub"><span class="badge" data-variant="success">verified</span>
+        All {{ check_count }} ledger checks pass.</p>
+    {% endif %}
+    <hr>
+    <h3>Card provider</h3>
+    <p class="sub">Card deposits wait at the card provider until it pays out to our bank.</p>
+    <a class="button outline" href="{% url 'pages:broker' %}">Card payouts</a>
+  </aside>
+</div>
 {% endblock %}

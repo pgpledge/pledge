@@ -1,0 +1,29 @@
+{% extends "exchange/base.html" %}
+{% block title %}Traders{% endblock %}
+{% block back %}
+<nav class="crumbs" aria-label="Breadcrumb">
+  <a class="back" href="{% url 'pages:home' %}" aria-label="Back to overview">←</a>
+  <a href="{% url 'pages:home' %}">Overview</a> › <span>Traders</span>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="section-head">
+  <h1>Traders</h1>
+  <a class="button" href="{% url 'pages:create-trader' %}">New trader</a>
+</div>
+<p class="sub">{{ traders|length }} trader{{ traders|length|pluralize }}, each with a wallet per currency on the ledger.</p>
+{% if traders %}
+  <ul class="rows links">
+    {% for trader in traders %}
+      <li><a href="{% url 'pages:trader' trader.pk %}">
+        <span class="coin">{{ trader.name|first|upper }}</span>
+        <span class="grow"><strong>{{ trader.name }}</strong>
+          <span class="sub">{{ trader.wallet_count }} wallet{{ trader.wallet_count|pluralize }} · since {{ trader.created_at|date:"M j, Y" }}</span></span>
+        <span class="chevron" aria-hidden="true">›</span>
+      </a></li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p class="sub">No traders yet.</p>
+{% endif %}
+{% endblock %}

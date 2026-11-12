@@ -1,0 +1,19 @@
+/* Theme: overrides oat's design tokens. Blue accent, white page, rounded controls. */
+:root {
+  --background: light-dark(#fff, #0a0b0d);
+  --foreground: light-dark(#0a0b0d, #fff);
+  --card: var(--background);
+  --card-foreground: var(--foreground);
+  --muted: light-dark(#eef0f3, #1e2025);
+  --muted-foreground: light-dark(#5b616e, #8a919e);
+  --border: light-dark(rgb(91 97 110 / .2), rgb(138 145 158 / .2));
+  --input: light-dark(rgb(91 97 110 / .66), rgb(138 145 158 / .66));
+  --primary: light-dark(#0052ff, #578bfa);
+  --primary-foreground: light-dark(#fff, #0a0b0d);
+  --ring: var(--primary);
+  --success: light-dark(#098551, #27ad75);
+  --danger: light-dark(#cf202f, #f0616d);
+  --radius-small: 8px;
+  --radius-medium: 12px;
+  --radius-large: 16px;
+}
