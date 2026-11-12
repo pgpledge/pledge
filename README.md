@@ -1,18 +1,7 @@
-<p align="center">
-  <a href="https://pgpledge.github.io/pledge/">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/public/logo-dark.svg">
-      <img src="docs/public/logo.svg" alt="pledge logo" width="72" height="72">
-    </picture>
-  </a>
-</p>
-
-<h1 align="center">pledge</h1>
-
-<p align="center">
-  <strong>A double-entry ledger inside PostgreSQL.</strong><br>
-  Create accounts, move money between them with plain SQL, and let the database keep the books straight.
-</p>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/public/pledge-social-dark-square.svg">
+  <img src="docs/public/pledge-social-light-square.svg" alt="pledge">
+</picture>
 
 <p align="center">
   <a href="https://pgpledge.github.io/pledge/"><strong>Documentation</strong></a> ·
@@ -33,11 +22,6 @@
 > [!WARNING]
 > **Alpha.** The SQL API, the stored schema and the Python package can still change between versions
 > without upgrade scripts. Don't use it for real money yet. Feedback is welcome.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/public/pledge-social-dark-square.svg">
-  <img src="docs/public/pledge-social-light-square.svg" alt="pledge">
-</picture>
 
 ## A quick look
 
