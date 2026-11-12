@@ -20,7 +20,7 @@
   <a href="https://github.com/pgpledge/pledge/actions/workflows/docs.yml"><img src="https://github.com/pgpledge/pledge/actions/workflows/docs.yml/badge.svg" alt="Docs"></a>
 </p>
 
-pledge grew out of [pgledger], Paul Gross's double-entry ledger in plain SQL, which is already in
+pledge grew out of [pgledger], [pgr0ss](https://github.com/pgr0ss)'s double-entry ledger in plain SQL, which is already in
 use. We kept its model, rewrote the hot path in Rust, and still benchmark against it. pledge itself
 is young: it works and is validated, including a replay of a real bank's million transactions,
 but the API may still change before 1.0. Feedback is very welcome.
@@ -93,10 +93,7 @@ just example       # exchange example on http://localhost:8000
 
 ## Credits
 
-Thanks to Paul Gross for [pgledger], the ledger pledge started from. Ideas also came from Modern
-Treasury, Blnk and Formance.
-
-Made by [terminalkitten](https://github.com/terminalkitten).
+pledge started from [pgledger] by [pgr0ss](https://github.com/pgr0ss).
 
 ## License
 

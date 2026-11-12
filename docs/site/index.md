@@ -64,10 +64,9 @@ pledge runs on PostgreSQL 17 and 18.
 
 ### Where it comes from
 
-pledge grew out of [pgledger](https://github.com/pgr0ss/pgledger), Paul Gross's double-entry ledger
+pledge grew out of [pgledger](https://github.com/pgr0ss/pgledger), [pgr0ss](https://github.com/pgr0ss)'s double-entry ledger
 in plain SQL, which is already in use. pledge keeps its model, rewrites the hot path in Rust, and
-still benchmarks against it: thank you, Paul. Ideas also came from Modern Treasury, Blnk and
-Formance.
+still benchmarks against it.
 
 pledge itself is young. It works and is validated, including a replay of a real bank's million
 transactions, but the API may still change before 1.0. Pin the version you use, and
