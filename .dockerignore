@@ -1,0 +1,8 @@
+target
+.git
+plans
+bench/results
+.DS_Store
+docs
+python
+.github
