@@ -1,0 +1,37 @@
+[package]
+name = "pledge"
+version = "0.1.0"
+edition = "2021"
+# get_disjoint_mut. The extension supports PostgreSQL 17 and 18.
+rust-version = "1.86"
+
+[lib]
+crate-type = ["cdylib"]
+
+[features]
+default = ["pg18"]
+pg17 = ["pgrx/pg17", "pgrx-tests/pg17" ]
+pg18 = ["pgrx/pg18", "pgrx-tests/pg18" ]
+pg19 = ["pgrx/pg19", "pgrx-tests/pg19" ]
+pg_test = []
+pg_bench = ["dep:pgrx-bench"]
+
+[dependencies]
+pgrx = "=0.19.3"
+
+[dependencies.pgrx-bench]
+version = "=0.19.3"
+optional = true
+
+[dev-dependencies]
+[dev-dependencies.pgrx-tests]
+version = "=0.19.3"
+
+[profile.dev]
+panic = "unwind"
+
+[profile.release]
+panic = "unwind"
+opt-level = 3
+lto = "fat"
+codegen-units = 1

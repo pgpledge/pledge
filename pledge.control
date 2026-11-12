@@ -1,0 +1,7 @@
+comment = 'Double-entry ledger (port of pgledger) with typed binary ids'
+default_version = '@CARGO_VERSION@'
+module_pathname = 'pledge'
+relocatable = false
+superuser = false
+trusted = false
+schema = pledge
