@@ -1,0 +1,57 @@
+{% extends "exchange/base.html" %}
+{% load exchange_format %}
+{% block title %}Exchange{% endblock %}
+{% block content %}
+<h1>Exchange</h1>
+
+<section>
+  <h2>Traders</h2>
+  {% if traders %}
+    <ul>
+      {% for trader in traders %}
+        <li><a href="{% url 'pages:trader' trader.pk %}">{{ trader.name }}</a> (since {{ trader.created_at|date:"Y-m-d" }})</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No traders yet.</p>
+  {% endif %}
+  <form method="post" action="{% url 'pages:create-trader' %}">
+    {% csrf_token %}
+    <input type="hidden" name="request_id" value="{{ request_id }}">
+    <fieldset>
+      <legend>New trader</legend>
+      <label for="name">Name</label>
+      <input id="name" name="name" maxlength="100" required>
+      <button type="submit">Open wallets</button>
+    </fieldset>
+  </form>
+</section>
+
+<section>
+  <h2>Broker ledger</h2>
+  <p>The broker's own accounts per currency, next to what all traders hold together.</p>
+  <table>
+    <tr><th>Currency</th><th>All traders</th><th>Liquidity</th><th>Fees</th><th>Card provider</th><th>Our bank</th><th>Card costs</th><th>Sum</th></tr>
+    {% for currency, row in totals.items %}
+      <tr><td>{{ currency }}</td><td class="num">{{ row.customers|plain }}</td>
+        <td class="num">{{ row.liquidity|plain }}</td><td class="num">{{ row.fees|plain }}</td>
+        <td class="num">{{ row.card|plain }}</td><td class="num">{{ row.bank|plain }}</td>
+        <td class="num">{{ row.card_costs|plain }}</td><td class="num">{{ row.sum|plain }}</td></tr>
+    {% endfor %}
+  </table>
+  <p>Money outside the exchange shows as negative: card deposits wait at the card provider until it pays out to our bank, and card costs are the provider's fees the broker pays.</p>
+  <form method="post" action="{% url 'pages:payout' %}">
+    {% csrf_token %}
+    <button type="submit">Card provider pays out</button>
+  </form>
+  <p>
+    {% if failed_checks %}
+      <strong>Ledger verification failed:</strong>
+      {% for check in failed_checks %}{{ check.check_name }} ({{ check.detail }}){% if not forloop.last %}, {% endif %}{% endfor %}
+    {% else %}
+      <strong>Ledger verified:</strong> all {{ check_count }} checks of pledge.verify() pass.
+    {% endif %}
+  </p>
+  <p>Every transfer moves money between two of these accounts, so every currency sums to zero.</p>
+</section>
+{% endblock %}
