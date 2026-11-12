@@ -1,0 +1,81 @@
+name: Extension
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "python/**"
+      - ".github/workflows/docs.yml"
+      - ".github/workflows/python.yml"
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "python/**"
+      - ".github/workflows/docs.yml"
+      - ".github/workflows/python.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    name: PostgreSQL ${{ matrix.pg }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        # add 19 once a plain postgres:19 tag exists
+        pg: ["17", "18"]
+    env:
+      PG_MAJOR: ${{ matrix.pg }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+
+      # tagged as in docker-compose.yml, so compose reuses them
+      - name: Build test image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: test
+          build-args: PG_MAJOR=${{ matrix.pg }}
+          tags: pledge-test:pg${{ matrix.pg }}
+          load: true
+          cache-from: type=gha,scope=pg${{ matrix.pg }}
+          cache-to: type=gha,scope=pg${{ matrix.pg }},mode=max
+      - name: Build runtime image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: runtime
+          build-args: PG_MAJOR=${{ matrix.pg }}
+          tags: pledge:pg${{ matrix.pg }}
+          load: true
+          cache-from: type=gha,scope=pg${{ matrix.pg }}
+
+      - name: cargo pgrx test, clippy, fmt
+        run: docker compose run --rm test
+      - name: Start database
+        run: docker compose up -d --wait db
+      - name: Smoke test
+        run: docker compose run --rm check
+      - name: Model-based property test
+        run: docker compose run --rm -e MODEL_SEEDS=5 -e MODEL_OPS=200 validate python -u model.py
+      - name: Bank test
+        run: docker compose run --rm -e BANK_DURATION=15 validate python -u bank.py
+
+      - name: Berka replay (first 100k rows)
+        run: docker compose run --rm -e BERKA_LIMIT=100000 validate python -u berka.py
+
+      - name: Database logs
+        if: failure()
+        run: docker compose logs db
+      - if: always()
+        run: docker compose down -v

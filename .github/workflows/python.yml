@@ -1,0 +1,81 @@
+name: Python
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "python/**"
+      # the extension the Django package talks to
+      - "src/**"
+      - "sql/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "pledge.control"
+      - "Dockerfile"
+      - ".github/workflows/python.yml"
+  pull_request:
+    paths:
+      - "python/**"
+      # the extension the Django package talks to
+      - "src/**"
+      - "sql/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "pledge.control"
+      - "Dockerfile"
+      - ".github/workflows/python.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  PG_MAJOR: "18"
+
+jobs:
+  django:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - name: Build runtime image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: runtime
+          build-args: PG_MAJOR=${{ env.PG_MAJOR }}
+          tags: pledge:pg${{ env.PG_MAJOR }}
+          load: true
+          cache-from: type=gha,scope=pg${{ env.PG_MAJOR }}
+          cache-to: type=gha,scope=pg${{ env.PG_MAJOR }},mode=max
+      - name: Start database
+        run: docker compose up -d --wait db
+
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          working-directory: python
+      - working-directory: python
+        run: uv sync --locked --all-groups
+      - working-directory: python
+        run: uv run ruff check src tests example
+      - working-directory: python
+        run: uv run ruff format --check src tests example
+      - working-directory: python
+        run: uv run ty check
+      - name: pytest (library + example project)
+        working-directory: python
+        run: uv run pytest
+      - name: pytest with server-side binding
+        working-directory: python
+        run: uv run pytest
+        env:
+          PLEDGE_SERVER_SIDE_BINDING: "1"
+
+      - name: Database logs
+        if: failure()
+        run: docker compose logs db
