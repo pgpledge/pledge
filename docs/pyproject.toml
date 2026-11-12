@@ -1,0 +1,11 @@
+# Tooling for the docs site only (not a package): uv run --project docs dokk serve --root docs
+[project]
+name = "pledge-docs"
+version = "0"
+requires-python = ">=3.11"
+dependencies = [
+    "dokk[search,serve]",
+]
+
+[tool.uv]
+package = false

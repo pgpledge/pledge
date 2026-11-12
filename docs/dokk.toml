@@ -1,0 +1,33 @@
+title = "pledge"
+description = "A double-entry ledger as a PostgreSQL extension, written in Rust."
+content_dir = "site"
+site_url = "https://pgpledge.github.io/pledge/"
+
+[links]
+github = "https://github.com/pgpledge/pledge"
+edit_url = "https://github.com/pgpledge/pledge/edit/main/docs/site/{path}"
+
+[theme]
+color = "green"
+
+[[sidebar]]
+label = "Start"
+items = ["index.md", "install.md"]
+
+[[sidebar]]
+label = "Use it from SQL"
+items = [
+    "sql/accounts.md",
+    "sql/transfers.md",
+    "sql/retries.md",
+    "sql/reading.md",
+    "sql/errors.md",
+]
+
+[[sidebar]]
+label = "Django"
+items = ["django/setup.md", "django/usage.md", "django/models.md"]
+
+[[sidebar]]
+label = "Reference"
+items = ["reference.md"]
