@@ -65,6 +65,10 @@ just docker-bench  # pgbench: pledge vs pgledger
 just example       # exchange example on http://localhost:8000
 ```
 
+## Is it any good?
+
+[Yes.](http://news.ycombinator.com/item?id=3067434)
+
 ## License
 
 [MIT](LICENSE)
