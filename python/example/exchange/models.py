@@ -1,3 +1,4 @@
+import secrets
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -21,6 +22,27 @@ class Trader(models.Model):
         return self.name
 
 
+def luhn_check_digit(digits: str) -> str:
+    total = 0
+    for position, char in enumerate(reversed(digits)):
+        value = int(char) * (2 if position % 2 == 0 else 1)
+        total += value - 9 if value > 9 else value
+    return str(-total % 10)
+
+
+def new_account_number() -> str:
+    """Ten digits, the last a Luhn check digit, so a mistyped number is caught before lookup."""
+    body = str(secrets.randbelow(9 * 10**8) + 10**8)
+    return body + luhn_check_digit(body)
+
+
+def parse_account_number(text: str) -> str:
+    digits = "".join(char for char in text if char not in " -")
+    if len(digits) != 10 or not digits.isdigit() or luhn_check_digit(digits[:9]) != digits[9]:
+        raise ValueError("that is not a valid account number; check it for typos")
+    return digits
+
+
 class Wallet(models.Model):
     """A trader's ledger account in one currency."""
 
@@ -28,6 +50,10 @@ class Wallet(models.Model):
     currency = models.CharField(max_length=5)
     account = models.OneToOneField(
         "pledge.Account", models.PROTECT, db_constraint=False, related_name="wallet"
+    )
+    # What traders see and type; the ledger's own id stays internal.
+    number = models.CharField(
+        max_length=10, unique=True, default=new_account_number, editable=False
     )
     opened_at = models.DateTimeField(auto_now_add=True)
 

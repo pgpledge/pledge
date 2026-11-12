@@ -79,7 +79,7 @@ class Command(BaseCommand):
                 services.fund_liquidity(currency, target - liquidity.balance)
 
     def deposit(self, person: Trader) -> None:
-        currency = self.rng.choice(services.currencies())
+        currency = self.rng.choice(services.fiat_currencies())
         low, high = (Decimal(bound) / self.price(currency) for bound in DEPOSIT_RANGE_EUR)
         method = self.rng.choice(list(services.DEPOSIT_METHODS))
         services.deposit(person, currency, self.random_amount(currency, low, high), method)
@@ -91,7 +91,8 @@ class Command(BaseCommand):
                 self.counts["card payouts"] += 1
 
     def withdraw(self, person: Trader) -> None:
-        funded = {c: b for c, b in self.balances(person).items() if b > 0}
+        fiat = services.fiat_currencies()
+        funded = {c: b for c, b in self.balances(person).items() if b > 0 and c in fiat}
         if not funded:
             return
         currency = self.rng.choice(sorted(funded))

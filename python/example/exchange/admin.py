@@ -58,7 +58,7 @@ class TraderAdmin(ReadOnlyAdmin, admin.ModelAdmin):
 
 @admin.register(Wallet)
 class WalletAdmin(ReadOnlyAdmin, admin.ModelAdmin):
-    list_display = ("trader", "currency", "account", "opened_at")
+    list_display = ("trader", "currency", "number", "account", "opened_at")
     list_filter = ("currency",)
     list_select_related = ("trader", "account")
 

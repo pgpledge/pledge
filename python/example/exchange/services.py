@@ -7,10 +7,18 @@ from django.db import IntegrityError, transaction
 from django.db.models import Sum
 
 import django_pledge as pledge
-from django_pledge import AccountId, TransferId
+from django_pledge import TransferId
 from django_pledge.models import Account, Transfer
 
-from .models import HouseAccount, Status, Trade, Trader, Wallet, Withdrawal
+from .models import (
+    HouseAccount,
+    Status,
+    Trade,
+    Trader,
+    Wallet,
+    Withdrawal,
+    parse_account_number,
+)
 
 DEPOSIT_METHODS = {"bank": "Bank transfer", "card": "Card"}
 # Money outside the ledger: these balance everything inside it, so they never go above zero.
@@ -34,6 +42,17 @@ class Rejected(Exception):
 
 def currencies() -> list[str]:
     return list(settings.EXCHANGE_CURRENCIES)
+
+
+def fiat_currencies() -> list[str]:
+    return [c for c in currencies() if c not in settings.EXCHANGE_CRYPTO]
+
+
+def check_fiat(currency: str) -> None:
+    """Banks and cards move fiat money only; crypto is bought and sold on the exchange."""
+    if currency in settings.EXCHANGE_CRYPTO:
+        others = " or ".join(fiat_currencies())
+        raise ValueError(f"{currency} can't move by bank or card; trade it for {others}")
 
 
 def smallest_unit(currency: str) -> Decimal:
@@ -141,6 +160,7 @@ def deposit(
     A card payment first sits at the card provider, which keeps a fee the broker pays.
     """
     amount = check_amount(currency, amount)
+    check_fiat(currency)
     if method not in DEPOSIT_METHODS:
         raise ValueError(f"unknown deposit method {method!r}")
     account = wallet(trader, currency).account
@@ -170,6 +190,8 @@ def deposit(
 
 def payout(currency: str) -> Transfer | None:
     """Settle with the card provider: it pays out what it holds, or collects what we owe it."""
+    if currency in settings.EXCHANGE_CRYPTO:
+        return None
     house_account(HouseAccount.Kind.CARD, currency)
     bank = house_account(HouseAccount.Kind.BANK, currency)
     with transaction.atomic():
@@ -189,6 +211,7 @@ def payout_destination(currency: str, method: str) -> Account:
     """Where money leaving a wallet goes: our bank account, or the card provider."""
     if method not in PAYOUT_METHODS:
         raise ValueError(f"unknown payout method {method!r}")
+    check_fiat(currency)
     kind = HouseAccount.Kind.CARD if method == "card" else HouseAccount.Kind.BANK
     return house_account(kind, currency)
 
@@ -207,8 +230,8 @@ def send(
     """Pay another trader. The recipient's account number fixes the currency."""
     recipients = Wallet.objects.select_related("trader", "account")
     try:
-        recipient = recipients.get(account_id=AccountId(to_account))
-    except (ValueError, Wallet.DoesNotExist):
+        recipient = recipients.get(number=parse_account_number(to_account))
+    except Wallet.DoesNotExist:
         raise ValueError("no trader account with that number") from None
     if recipient.trader_id == sender.pk:
         raise ValueError("that is your own account; use a trade to convert between currencies")
@@ -394,11 +417,19 @@ def execute_withdrawal(withdrawal_id: int) -> tuple[Withdrawal, Transfer]:
 
 def close_wallet(trader: Trader | int, currency: str, method: str = "bank") -> Transfer | None:
     """Pay out any remaining balance and close the account, all or nothing."""
-    destination = payout_destination(currency, method)
+    if method not in PAYOUT_METHODS:
+        raise ValueError(f"unknown payout method {method!r}")
     with transaction.atomic():
         account = wallet(trader, currency).account
         payout = None
         if account.balance > 0:
+            if currency in settings.EXCHANGE_CRYPTO:
+                others = " or ".join(fiat_currencies())
+                raise ValueError(
+                    f"sell your {format(account.balance, 'f')} {currency} for {others} first, "
+                    "then close the wallet"
+                )
+            destination = payout_destination(currency, method)
             metadata = {
                 "kind": "closing payout",
                 **payout_metadata(currency, account.balance, method),

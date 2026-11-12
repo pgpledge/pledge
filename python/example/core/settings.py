@@ -73,6 +73,8 @@ STATIC_URL = "static/"
 
 # Currency code -> decimal places of its smallest unit.
 EXCHANGE_CURRENCIES = {"EUR": 2, "USD": 2, "BTC": 8}
+# Only bought and sold on the exchange: no bank or card deposits and payouts.
+EXCHANGE_CRYPTO = {"BTC"}
 # Reference prices in EUR; a real exchange would read these from a price feed.
 EXCHANGE_PRICES_EUR = {"EUR": "1", "USD": "0.92", "BTC": "58000"}
 EXCHANGE_FEE_RATE = "0.0025"

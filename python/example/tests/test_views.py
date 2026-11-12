@@ -235,9 +235,13 @@ def test_close_wallet_view(client, sign_up):
 
 
 def test_zero_balances_render_in_plain_notation(client, sign_up):
-    trader = sign_up("leaving", BTC="0.5")
-    response = post(client, reverse("exchange:close-wallet", args=[trader["trader"], "BTC"]))
-    assert response.json()["portfolio"]["balances"]["BTC"] == "0.00000000"
+    trader = sign_up("leaving", EUR="100.00")
+    assert trade(client, trader, "t-1", "EUR", "BTC", "50.00").status_code == 201
+    bought = balances(client, trader)["BTC"]
+    assert trade(client, trader, "t-2", "BTC", "EUR", str(bought)).status_code == 201
+    assert balances(client, trader)["BTC"] == 0
+    response = client.get(reverse("exchange:portfolio", args=[trader["trader"]]))
+    assert response.json()["balances"]["BTC"] == "0.00000000"
 
 
 def test_house_view_sums_to_zero(client, sign_up):
@@ -278,10 +282,10 @@ def test_card_deposit_and_payout_pages(client, sign_up):
 
     assert "by card; the broker pays 1.50 EUR card fee." in response.content.decode()
     page = client.get(reverse("pages:trader", args=[trader["trader"]])).content.decode()
-    assert "deposit by card" in page and "Bank transfer" in page
+    assert "Deposit by card" in page and "Bank transfer" in page
     response = client.post(reverse("pages:payout"), follow=True)
     assert "The card provider paid out" in response.content.decode()
-    assert "Card provider pays out" in response.content.decode()
+    assert "Pay out all currencies" in response.content.decode()
     assert balances(client, trader)["EUR"] == Decimal("100.00")
 
 
@@ -304,3 +308,16 @@ def test_deposit_rejects_a_non_string_transfer_id(client, sign_up):
     url = reverse("exchange:deposit", args=[trader["trader"]])
     response = post(client, url, {"currency": "EUR", "amount": "1.00", "transfer_id": 123})
     assert response.status_code == 400
+
+
+def test_trader_pages_link_up(client, sign_up):
+    trader = sign_up("linked")
+    listing = client.get(reverse("pages:traders")).content.decode()
+    assert reverse("pages:trader", args=[trader["trader"]]) in listing
+    form = client.get(reverse("pages:create-trader")).content.decode()
+    assert 'name="request_id"' in form and reverse("pages:traders") in form
+    body = {"request_id": str(TransferId.new()), "name": f"new-{TransferId.new()}"}
+    response = client.post(reverse("pages:create-trader"), body)
+    assert response.status_code == 302 and "/traders/" in response["Location"]
+    missing = client.post(reverse("pages:create-trader"), {"request_id": "x", "name": ""})
+    assert missing["Location"] == reverse("pages:create-trader")
