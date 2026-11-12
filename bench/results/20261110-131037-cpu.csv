@@ -1,0 +1,13 @@
+profile,target,scenario,run,accounts,clients,duration_s,tps,lat_avg_ms,lat_p99_ms,transfers,transfers_per_s,bytes_per_transfer,check,sync,pg_version,pgledger_sha
+cpu,pgledger,transfer,1,50,1,10,3432.233423,0.291,0.67,34309,3430.9,755,ok,off,18.6,unknown
+cpu,pledge,transfer,1,50,1,10,5003.877603,0.200,0.46,50031,5003.1,628,ok,off,18.6,unknown
+cpu,pgledger,batch,1,50,1,10,2137.853645,0.468,0.91,42740,4274.0,746,ok,off,18.6,unknown
+cpu,pledge,batch,1,50,1,10,3199.364868,0.313,0.65,63978,6397.8,626,ok,off,18.6,unknown
+cpu,pgledger,idempotent,1,50,1,10,2473.628156,0.404,0.86,24724,2472.4,905,ok,off,18.6,unknown
+cpu,pledge,idempotent,1,50,1,10,1728.674852,0.578,1.19,17286,1728.6,623,ok,off,18.6,unknown
+cpu,pgledger,transfer,1,50,8,10,11178.061932,0.716,2.67,111616,11161.6,748,ok,off,18.6,unknown
+cpu,pledge,transfer,1,50,8,10,16024.709928,0.499,1.55,159970,15997.0,632,ok,off,18.6,unknown
+cpu,pgledger,batch,1,50,8,10,4431.683659,1.805,5.86,88514,8851.4,738,ok,off,18.6,unknown
+cpu,pledge,batch,1,50,8,10,8031.537875,0.996,3.05,160446,16044.6,629,ok,off,18.6,unknown
+cpu,pgledger,idempotent,1,50,8,10,11313.165760,0.707,1.97,112925,11292.5,911,ok,off,18.6,unknown
+cpu,pledge,idempotent,1,50,8,10,4404.866296,1.816,6.22,43979,4397.9,628,ok,off,18.6,unknown

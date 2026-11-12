@@ -1,0 +1,7 @@
+profile,target,scenario,run,accounts,clients,duration_s,tps,lat_avg_ms,lat_p99_ms,transfers,transfers_per_s,bytes_per_transfer,check,sync,pg_version,pgledger_sha
+batch,pgledger,transfer,1,1000,8,15,2918.688309,2.741,8.55,43761,2917.4,751,ok,on,18.6,unknown
+batch,pledge,transfer,1,1000,8,15,1855.661082,4.311,10.21,27864,1857.6,693,ok,on,18.6,unknown
+batch,pgledger,batch10,1,1000,8,15,472.353097,16.936,56.17,72110,4807.3,735,ok,on,18.6,unknown
+batch,pledge,batch10,1,1000,8,15,519.758106,15.392,52.84,77990,5199.3,682,ok,on,18.6,unknown
+batch,pgledger,batch100,1,1000,8,15,45.335499,176.462,628.52,68600,4573.3,780,ok,on,18.6,unknown
+batch,pledge,batch100,1,1000,8,15,97.162877,82.336,292.66,146300,9753.3,707,ok,on,18.6,unknown

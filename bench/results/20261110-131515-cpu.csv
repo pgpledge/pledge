@@ -1,0 +1,5 @@
+profile,target,scenario,run,accounts,clients,duration_s,tps,lat_avg_ms,lat_p99_ms,transfers,transfers_per_s,bytes_per_transfer,check,sync,pg_version,pgledger_sha
+cpu,pgledger,idempotent,1,50,1,10,2509.600372,0.398,0.95,25080,2508.0,906,ok,off,18.6,unknown
+cpu,pledge,idempotent,1,50,1,10,3684.353940,0.271,0.67,36832,3683.2,626,ok,off,18.6,unknown
+cpu,pgledger,idempotent,1,50,8,10,11308.575311,0.707,2.11,112839,11283.9,896,ok,off,18.6,unknown
+cpu,pledge,idempotent,1,50,8,10,15701.566761,0.510,1.51,156757,15675.7,631,ok,off,18.6,unknown
