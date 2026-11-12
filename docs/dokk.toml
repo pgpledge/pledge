@@ -30,4 +30,4 @@ items = ["django/setup.md", "django/usage.md", "django/models.md"]
 
 [[sidebar]]
 label = "Reference"
-items = ["reference.md"]
+items = ["reference.md", "performance.md"]

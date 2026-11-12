@@ -59,8 +59,8 @@ DETAIL:  {"code": "pledge.negative_balance_not_allowed", "account_id": "pla_01M7
   once.
 - **Hard to tamper with.** The database itself refuses to delete ledger rows or change amounts.
   You close accounts, you never delete them.
-- **Fast.** Roughly 1.5 to 2 times faster than [pgledger](https://github.com/pgr0ss/pgledger) per
-  transfer, and about 2 times faster for batches.
+- **Fast.** Roughly 1.5 times faster than [pgledger](https://github.com/pgr0ss/pgledger) per
+  transfer, and about 2 times faster for batches. See [Performance](performance.md).
 - **Clear errors.** Each failure has a stable code, like `pledge.negative_balance_not_allowed`,
   that your app can match on.
 
