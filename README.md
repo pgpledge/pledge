@@ -20,9 +20,10 @@
   <a href="https://github.com/pgpledge/pledge/actions/workflows/docs.yml"><img src="https://github.com/pgpledge/pledge/actions/workflows/docs.yml/badge.svg" alt="Docs"></a>
 </p>
 
-> [!WARNING]
-> **Alpha.** The SQL API, the stored schema and the Python package can still change between versions
-> without upgrade scripts. Don't use it for real money yet. Feedback is welcome.
+pledge grew out of [pgledger], Paul Gross's double-entry ledger in plain SQL, which is already in
+use. We kept its model, rewrote the hot path in Rust, and still benchmark against it. pledge itself
+is young: it works and is validated, including a replay of a real bank's million transactions,
+but the API may still change before 1.0. Feedback is very welcome.
 
 ## A quick look
 
@@ -89,6 +90,13 @@ just example       # exchange example on http://localhost:8000
 ## Is it any good?
 
 [Yes.](http://news.ycombinator.com/item?id=3067434)
+
+## Credits
+
+Thanks to Paul Gross for [pgledger], the ledger pledge started from. Ideas also came from Modern
+Treasury, Blnk and Formance.
+
+Made by [terminalkitten](https://github.com/terminalkitten).
 
 ## License
 

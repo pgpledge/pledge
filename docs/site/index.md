@@ -3,10 +3,6 @@ title: pledge
 description: A double-entry ledger inside PostgreSQL. Create accounts, move money between them, and let the database keep the books straight.
 ---
 
-:::caution[Alpha]
-pledge is alpha software: the SQL API, the stored schema and the Python package can still change between versions without upgrade scripts, so don't use it for real money yet. Feedback is welcome.
-:::
-
 pledge is a double-entry ledger that runs inside PostgreSQL. You create accounts and move money
 between them with plain SQL. Every transfer is booked twice, once out and once in, so the books
 always add up.
@@ -65,6 +61,17 @@ DETAIL:  {"code": "pledge.negative_balance_not_allowed", "account_id": "pla_01M7
   that your app can match on.
 
 pledge runs on PostgreSQL 17 and 18.
+
+### Where it comes from
+
+pledge grew out of [pgledger](https://github.com/pgr0ss/pgledger), Paul Gross's double-entry ledger
+in plain SQL, which is already in use. pledge keeps its model, rewrites the hot path in Rust, and
+still benchmarks against it: thank you, Paul. Ideas also came from Modern Treasury, Blnk and
+Formance.
+
+pledge itself is young. It works and is validated, including a replay of a real bank's million
+transactions, but the API may still change before 1.0. Pin the version you use, and
+[tell us](https://github.com/pgpledge/pledge/issues) what you run into.
 
 ## Where next
 

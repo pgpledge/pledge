@@ -8,9 +8,8 @@ straight.
 [Source](https://github.com/pgpledge/pledge/tree/main/python) ·
 [Example app](https://github.com/pgpledge/pledge/tree/main/python/example)
 
-> [!WARNING]
-> **Alpha.** The API can still change between versions without upgrade scripts. Don't use it for
-> real money yet. Feedback is welcome.
+django-pledge is young: it works and is tested against a real PostgreSQL with pledge, but the
+API may still change before 1.0. Feedback is very welcome.
 
 Requires Python 3.11+, Django 4.2+, psycopg 3 and a PostgreSQL database with the pledge
 extension available.

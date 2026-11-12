@@ -3,10 +3,6 @@ title: Install and set up
 description: Run PostgreSQL with pledge, create the extension and give your app role access.
 ---
 
-:::caution[Alpha]
-pledge is alpha software: the SQL API, the stored schema and the Python package can still change between versions without upgrade scripts, so don't use it for real money yet. Feedback is welcome.
-:::
-
 :::::steps
 1. **Get a PostgreSQL with pledge.** Pick one:
 
