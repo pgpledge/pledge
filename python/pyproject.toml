@@ -1,0 +1,59 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "django-pledge"
+version = "0.0.1a1"
+description = "Django support for the pledge PostgreSQL ledger extension"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+dependencies = ["Django>=4.2", "psycopg>=3.1"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: Django",
+    "Programming Language :: Python :: 3",
+    "Topic :: Database",
+]
+
+[project.urls]
+Documentation = "https://pgpledge.github.io/pledge/"
+Source = "https://github.com/pgpledge/pledge"
+
+[dependency-groups]
+dev = [
+    "Django>=5.2",
+    "psycopg[binary]>=3.2",
+    "pytest>=8",
+    "pytest-django>=4.14",
+    "pytest-asyncio>=0.24",
+]
+lint = [
+    "ruff",
+    "ty>=0.0.100",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/django_pledge"]
+
+[tool.hatch.build.targets.sdist]
+only-include = ["src/django_pledge", "README.md", "LICENSE"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "example/run_example_tests.py"]
+pythonpath = ["example"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["RUF012"]  # Django declares Meta/fields as mutable class attributes
+
+[tool.ty.src]
+include = ["src"]
