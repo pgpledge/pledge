@@ -67,8 +67,7 @@ just example       # exchange example on http://localhost:8000
 
 ## License
 
-[MIT](LICENSE). The Berka dataset in `tests/validation/data/berka` is the PKDD'99 release by
-Petr Berka and Marta Sochorova and is not covered by this license.
+[MIT](LICENSE)
 
 [pgrx]: https://github.com/pgcentralfoundation/pgrx
 [pgledger]: https://github.com/pgr0ss/pgledger
